@@ -1,0 +1,251 @@
+/* Hero section overrides for landing page */
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 6rem 1.5rem 5rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    gap: 3.5rem;
+}
+
+.hero-inner {
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* Badge styling */
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #e6f4ea; /* Light mint/green background */
+    color: #137333; /* Dark green text */
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.5rem 1.2rem;
+    border-radius: 999px;
+    text-transform: none;
+    letter-spacing: normal;
+    margin-bottom: 0.5rem;
+}
+
+.badge-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #1e8e3e;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Title styling */
+.hero-title {
+    font-family: var(--font-body); /* Sans-serif modern font */
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    color: #111111;
+    margin: 0;
+}
+
+.hero-title-green {
+    color: #1fa867; /* Vibrant emerald green */
+}
+
+/* Subtitle styling */
+.hero-subtitle {
+    font-size: 1.2rem;
+    color: #666666;
+    line-height: 1.6;
+    max-width: 680px;
+    margin: 0;
+}
+
+/* Actions styling */
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+/* Capsule buttons */
+.btn-hero {
+    display: inline-block;
+    background: #111111;
+    color: #ffffff;
+    padding: 0.9rem 2.2rem;
+    border-radius: 999px; /* Pill/Capsule shape */
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s, transform 0.1s;
+    text-decoration: none;
+}
+
+.btn-hero:hover {
+    background: #252525;
+}
+
+/* Dashboard Window Wrapper */
+.hero-dashboard-window {
+    width: 100%;
+    max-width: 850px;
+    background: #fbfbfa; /* Light warm grey background */
+    border: 1px solid #e4e1da;
+    border-radius: 20px;
+    padding: 1.75rem 2.25rem 2.25rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+    text-align: left;
+}
+
+/* macOS dots header */
+.window-header {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1.75rem;
+}
+
+.window-header .dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.window-header .dot.red { background-color: #ff5f56; }
+.window-header .dot.yellow { background-color: #ffbd2e; }
+.window-header .dot.green { background-color: #27c93f; }
+
+.window-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Dashboard stats grid */
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+}
+
+.stat-card {
+    background: #ffffff;
+    border: 1px solid #e4e1da;
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #8c8c8c;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111111;
+    line-height: 1.2;
+    margin-bottom: 0.2rem;
+}
+
+.stat-change {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.stat-change.negative {
+    color: #eb5757; /* Softer red matching modern dashboards */
+}
+
+.stat-change.positive {
+    color: #27ae60; /* Softer green */
+}
+
+.stat-change.neutral {
+    color: #828282; /* Muted gray */
+}
+
+/* Dashboard Chart Card */
+.dashboard-chart-card {
+    background: #ffffff;
+    border: 1px solid #e4e1da;
+    border-radius: 16px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.chart-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    align-items: center;
+    gap: 1rem;
+}
+
+.chart-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #4f4f4f;
+}
+
+.chart-bar-container {
+    height: 12px;
+    background: #f5f5f4;
+    border-radius: 999px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.chart-bar {
+    height: 100%;
+    border-radius: 999px;
+}
+
+/* Visual color match for the chart bars */
+.chart-bar.orange {
+    background-color: #f2994a;
+}
+
+.chart-bar.blue {
+    background-color: #2f80ed;
+}
+
+.chart-bar.purple {
+    background-color: #9b51e0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero {
+        padding: 4rem 1rem 3rem;
+        gap: 2.5rem;
+    }
+    
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .hero-dashboard-window {
+        padding: 1.5rem;
+    }
+    
+    .dashboard-chart-card {
+        padding: 1.25rem;
+    }
+}
