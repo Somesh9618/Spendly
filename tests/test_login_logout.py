@@ -24,8 +24,8 @@ def test_successful_login(client):
     }, follow_redirects=True)
     
     assert response.status_code == 200
-    # Redirects directly to landing page
-    assert b"Track every rupee" in response.data
+    # Redirects directly to profile page
+    assert b"Quick Stats" in response.data
     assert b"Profile" in response.data
     assert b"Logout" in response.data
     assert b"Sign in" not in response.data

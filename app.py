@@ -100,7 +100,7 @@ def login():
             return render_template("login.html", error="Invalid email or password.")
             
         session["user_id"] = user["id"]
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     return render_template("login.html")
 
@@ -127,7 +127,34 @@ def logout():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    user_info = {
+        "name": g.user["name"] if (g.user and hasattr(g.user, "keys") and "name" in g.user.keys()) else (g.user[1] if g.user and len(g.user) > 1 else "Demo User"),
+        "email": g.user["email"] if (g.user and hasattr(g.user, "keys") and "email" in g.user.keys()) else (g.user[2] if g.user and len(g.user) > 2 else "demo@spendly.com"),
+        "member_since": "August 2, 2026"
+    }
+
+    stats = {
+        "total_spent": "₹18,240.00",
+        "transaction_count": 34,
+        "top_category": "Food"
+    }
+
+    transactions = [
+        {"date": "2026-08-01", "description": "Dinner at local diner", "category": "Food", "amount": "₹1,850.00", "badge_class": "badge-food"},
+        {"date": "2026-08-02", "description": "Monthly internet subscription", "category": "Bills", "amount": "₹1,200.00", "badge_class": "badge-bills"},
+        {"date": "2026-08-03", "description": "New running sneakers", "category": "Shopping", "amount": "₹4,500.00", "badge_class": "badge-shopping"}
+    ]
+
+    category_breakdown = [
+        {"category": "Food", "amount": "₹8,500.00", "percentage": 47, "bar_class": "bar-food"},
+        {"category": "Bills", "amount": "₹6,200.00", "percentage": 34, "bar_class": "bar-bills"},
+        {"category": "Shopping", "amount": "₹3,540.00", "percentage": 19, "bar_class": "bar-shopping"}
+    ]
+
+    return render_template("profile.html", user_info=user_info, stats=stats, transactions=transactions, category_breakdown=category_breakdown)
 
 
 @app.route("/expenses/add")
