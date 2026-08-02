@@ -1,5 +1,6 @@
 # pyrefly: ignore [missing-import]
 from flask import Flask, render_template, request, redirect, url_for
+# pyrefly: ignore [missing-import]
 from werkzeug.security import generate_password_hash
 from database.db import init_db, seed_db
 
