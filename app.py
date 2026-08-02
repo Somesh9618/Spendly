@@ -1,15 +1,32 @@
 # pyrefly: ignore [missing-import]
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session, g
 # pyrefly: ignore [missing-import]
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
+import os
 from database.db import init_db, seed_db
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-spendly")
 
 # Initialize and seed the database on app startup
 with app.app_context():
     init_db()
     seed_db()
+
+
+@app.before_request
+def load_logged_in_user():
+    user_id = session.get("user_id")
+    if user_id is None:
+        g.user = None
+    else:
+        from database.db import get_db
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, email FROM users WHERE id = ?", (user_id,))
+        g.user = cursor.fetchone()
+        conn.close()
+
 
 
 # ------------------------------------------------------------------ #
@@ -63,8 +80,28 @@ def register():
     return render_template("register.html")
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+        
+        if not email or not password:
+            return render_template("login.html", error="Invalid email or password.")
+            
+        from database.db import get_db
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, password_hash FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+        conn.close()
+        
+        if user is None or not check_password_hash(user["password_hash"], password):
+            return render_template("login.html", error="Invalid email or password.")
+            
+        session["user_id"] = user["id"]
+        return redirect(url_for("landing"))
+
     return render_template("login.html")
 
 
@@ -84,7 +121,8 @@ def privacy():
 
 @app.route("/logout")
 def logout():
-    return "Logout — coming in Step 3"
+    session.clear()
+    return redirect(url_for("landing"))
 
 
 @app.route("/profile")
