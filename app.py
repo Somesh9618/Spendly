@@ -68,5 +68,18 @@ def delete_expense(id):
     return "Delete expense — coming in Step 9"
 
 
+@app.route("/debug-db")
+def debug_db():
+    from database.db import get_db
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, email, created_at FROM users")
+    users = [dict(row) for row in cursor.fetchall()]
+    cursor.execute("SELECT id, user_id, amount, category, date, description, created_at FROM expenses")
+    expenses = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return render_template("debug_db.html", users=users, expenses=expenses)
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
