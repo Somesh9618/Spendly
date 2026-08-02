@@ -1,5 +1,6 @@
 # pyrefly: ignore [missing-import]
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for
+from werkzeug.security import generate_password_hash
 from database.db import init_db, seed_db
 
 app = Flask(__name__)
@@ -19,8 +20,45 @@ def landing():
     return render_template("landing.html")
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        
+        if not name or not email or not password:
+            return render_template("register.html", error="All fields are required.")
+            
+        if len(password) < 8:
+            return render_template("register.html", error="Password must be at least 8 characters long.")
+            
+        from database.db import get_db
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # Check if email is already taken
+        cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
+        if cursor.fetchone() is not None:
+            conn.close()
+            return render_template("register.html", error="Email address is already registered.")
+            
+        # Hash password and store
+        password_hash = generate_password_hash(password)
+        try:
+            cursor.execute("""
+                INSERT INTO users (name, email, password_hash)
+                VALUES (?, ?, ?)
+            """, (name, email, password_hash))
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            conn.close()
+            return render_template("register.html", error="An error occurred during registration. Please try again.")
+            
+        conn.close()
+        return redirect(url_for("login", success="Registration successful! Please log in."))
+
     return render_template("register.html")
 
 
@@ -66,6 +104,19 @@ def edit_expense(id):
 @app.route("/expenses/<int:id>/delete")
 def delete_expense(id):
     return "Delete expense — coming in Step 9"
+
+
+@app.route("/debug-db")
+def debug_db():
+    from database.db import get_db
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, email, created_at FROM users")
+    users = [dict(row) for row in cursor.fetchall()]
+    cursor.execute("SELECT id, user_id, amount, category, date, description, created_at FROM expenses")
+    expenses = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return render_template("debug_db.html", users=users, expenses=expenses)
 
 
 if __name__ == "__main__":

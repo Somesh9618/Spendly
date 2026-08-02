@@ -13,6 +13,13 @@
         </div>
 
         <div class="auth-card">
+            {% set success = request.args.get('success') %}
+            {% if success %}
+            <div class="auth-success" style="background: var(--accent-light); color: var(--accent); border: 1px solid #c2e0cd; border-radius: var(--radius-sm); padding: 0.75rem 1rem; font-size: 0.875rem; margin-bottom: 1.25rem;">
+                {{ success }}
+            </div>
+            {% endif %}
+
             {% if error %}
             <div class="auth-error">{{ error }}</div>
             {% endif %}

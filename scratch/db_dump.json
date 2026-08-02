@@ -1,0 +1,141 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Demo User",
+      "email": "demo@spendly.com",
+      "created_at": "2026-08-02 09:08:00"
+    },
+    {
+      "id": 2,
+      "name": "Ishaan Iyer",
+      "email": "ishaan.iyer577@gmail.com",
+      "created_at": "2026-08-02 10:43:20"
+    },
+    {
+      "id": 3,
+      "name": "Somesj",
+      "email": "someshj@gmail.com",
+      "created_at": "2026-08-02 11:26:30"
+    }
+  ],
+  "expenses": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "amount": 25.5,
+      "category": "Food",
+      "date": "2026-08-01",
+      "description": "Dinner at local diner",
+      "created_at": "2026-08-02 09:08:00"
+    },
+    {
+      "id": 2,
+      "user_id": 1,
+      "amount": 15.0,
+      "category": "Transport",
+      "date": "2026-08-01",
+      "description": "Daily commute subway fare",
+      "created_at": "2026-08-02 09:08:00"
+    },
+    {
+      "id": 3,
+      "user_id": 1,
+      "amount": 120.0,
+      "category": "Bills",
+      "date": "2026-08-02",
+      "description": "Monthly internet subscription",
+      "created_at": "2026-08-02 09:08:00"
+    },
+    {
+      "id": 4,
+      "user_id": 1,
+      "amount": 45.0,
+      "category": "Health",
+      "date": "2026-08-02",
+      "description": "Vitamins and prescription refill",
+      "created_at": "2026-08-02 09:08:00"
+    },
+    {
+      "id": 5,
+      "user_id": 1,
+      "amount": 35.0,
+      "category": "Entertainment",
+      "date": "2026-08-03",
+      "description": "Cinema tickets with friends",
+      "created_at": "2026-08-02 09:08:00"
+    },
+    {
+      "id": 6,
+      "user_id": 1,
+      "amount": 89.99,
+      "category": "Shopping",
+      "date": "2026-08-03",
+      "description": "New running sneakers",
+      "created_at": "2026-08-02 09:08:00"
+    },
+    {
+      "id": 7,
+      "user_id": 1,
+      "amount": 12.5,
+      "category": "Other",
+      "date": "2026-08-04",
+      "description": "Workspace notebook",
+      "created_at": "2026-08-02 09:08:00"
+    },
+    {
+      "id": 8,
+      "user_id": 1,
+      "amount": 18.75,
+      "category": "Food",
+      "date": "2026-08-05",
+      "description": "Afternoon coffee and pastry",
+      "created_at": "2026-08-02 09:08:00"
+    },
+    {
+      "id": 9,
+      "user_id": 2,
+      "amount": 479.65,
+      "category": "Transport",
+      "date": "2026-07-19",
+      "description": "Bus pass renewal",
+      "created_at": "2026-08-02 11:00:07"
+    },
+    {
+      "id": 10,
+      "user_id": 2,
+      "amount": 492.52,
+      "category": "Food",
+      "date": "2026-07-02",
+      "description": "Biryani from Paradise Biryani",
+      "created_at": "2026-08-02 11:00:07"
+    },
+    {
+      "id": 11,
+      "user_id": 2,
+      "amount": 444.55,
+      "category": "Transport",
+      "date": "2026-07-10",
+      "description": "Bus pass renewal",
+      "created_at": "2026-08-02 11:00:07"
+    },
+    {
+      "id": 12,
+      "user_id": 2,
+      "amount": 728.38,
+      "category": "Food",
+      "date": "2026-05-16",
+      "description": "Zomato lunch delivery",
+      "created_at": "2026-08-02 11:00:07"
+    },
+    {
+      "id": 13,
+      "user_id": 2,
+      "amount": 1195.51,
+      "category": "Shopping",
+      "date": "2026-07-21",
+      "description": "Clothes from Myntra",
+      "created_at": "2026-08-02 11:00:07"
+    }
+  ]
+}
