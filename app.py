@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, g
 # pyrefly: ignore [missing-import]
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
+from datetime import datetime
 from database.db import init_db, seed_db
 
 app = Flask(__name__)
@@ -138,7 +139,6 @@ def profile():
     cursor.execute("SELECT name, email, created_at FROM users WHERE id = ?", (session["user_id"],))
     user_row = cursor.fetchone()
     
-    from datetime import datetime
     try:
         created_at_dt = datetime.strptime(user_row["created_at"], "%Y-%m-%d %H:%M:%S")
         member_since_str = created_at_dt.strftime("%B %d, %Y").replace(" 0", " ")
@@ -151,87 +151,142 @@ def profile():
         "member_since": member_since_str
     }
 
-    # SUBAGENT_2_STATS_START
-    # Calculate total spent
-    cursor.execute("SELECT SUM(amount) FROM expenses WHERE user_id = ?", (session["user_id"],))
-    total_spent_val = cursor.fetchone()[0]
-    total_spent_str = f"₹{total_spent_val:,.2f}" if total_spent_val is not None else "₹0.00"
-    
-    # Calculate transaction count
-    cursor.execute("SELECT COUNT(*) FROM expenses WHERE user_id = ?", (session["user_id"],))
-    tx_count_val = cursor.fetchone()[0]
-    
-    # Calculate top category
-    cursor.execute("""
-        SELECT category 
-        FROM expenses 
-        WHERE user_id = ? 
-        GROUP BY category 
-        ORDER BY SUM(amount) DESC 
-        LIMIT 1
-    """, (session["user_id"],))
-    top_cat_row = cursor.fetchone()
-    top_category_str = top_cat_row["category"] if top_cat_row else "N/A"
-    
-    stats = {
-        "total_spent": total_spent_str,
-        "transaction_count": tx_count_val,
-        "top_category": top_category_str
-    }
-    # SUBAGENT_2_STATS_END
+    start_date = request.args.get("start_date", "").strip()
+    end_date = request.args.get("end_date", "").strip()
 
-    # SUBAGENT_1_TRANSACTIONS_START
-    cursor.execute("""
-        SELECT date, description, category, amount 
-        FROM expenses 
-        WHERE user_id = ? 
-        ORDER BY date DESC, id DESC 
-        LIMIT 5
-    """, (session["user_id"],))
-    db_expenses = cursor.fetchall()
-    
-    transactions = []
-    for exp in db_expenses:
-        cat_lower = exp["category"].lower() if exp["category"] else "other"
-        transactions.append({
-            "date": exp["date"],
-            "description": exp["description"] if exp["description"] else "",
-            "category": exp["category"],
-            "amount": f"₹{exp['amount']:,.2f}",
-            "badge_class": f"badge-{cat_lower}"
-        })
-    # SUBAGENT_1_TRANSACTIONS_END
+    error_msg = None
+    valid_start = None
+    valid_end = None
 
-    # SUBAGENT_3_BREAKDOWN_START
-    # Calculate total spent to compute percentages
-    cursor.execute("SELECT SUM(amount) FROM expenses WHERE user_id = ?", (session["user_id"],))
-    grand_total_row = cursor.fetchone()
-    grand_total = grand_total_row[0] if grand_total_row and grand_total_row[0] is not None else 0.0
-    
-    cursor.execute("""
-        SELECT category, SUM(amount) AS total 
-        FROM expenses 
-        WHERE user_id = ? 
-        GROUP BY category 
-        ORDER BY total DESC
-    """, (session["user_id"],))
-    db_breakdown = cursor.fetchall()
-    
-    category_breakdown = []
-    for row in db_breakdown:
-        cat_total = row["total"]
-        pct = round((cat_total / grand_total) * 100) if grand_total > 0 else 0
-        cat_lower = row["category"].lower() if row["category"] else "other"
-        category_breakdown.append({
-            "category": row["category"],
-            "amount": f"₹{cat_total:,.2f}",
-            "percentage": pct,
-            "bar_class": f"bar-{cat_lower}"
-        })
-    # SUBAGENT_3_BREAKDOWN_END
+    if start_date:
+        try:
+            datetime.strptime(start_date, "%Y-%m-%d")
+            valid_start = start_date
+        except ValueError:
+            error_msg = "Invalid start date format."
+
+    if end_date:
+        try:
+            datetime.strptime(end_date, "%Y-%m-%d")
+            valid_end = end_date
+        except ValueError:
+            error_msg = "Invalid end date format."
+
+    if not error_msg and valid_start and valid_end and valid_start > valid_end:
+        error_msg = "Start date cannot be after end date."
+
+    if error_msg:
+        stats = {
+            "total_spent": "₹0.00",
+            "transaction_count": 0,
+            "top_category": "N/A"
+        }
+        transactions = []
+        category_breakdown = []
+    else:
+        # Build dynamic queries using parameterized logic
+        conditions = ["user_id = ?"]
+        params = [session["user_id"]]
+
+        if valid_start:
+            conditions.append("date >= ?")
+            params.append(valid_start)
+        if valid_end:
+            conditions.append("date <= ?")
+            params.append(valid_end)
+
+        where_clause = " AND ".join(conditions)
+
+        # SUBAGENT_2_STATS_START
+        # Calculate total spent
+        cursor.execute(f"SELECT SUM(amount) FROM expenses WHERE {where_clause}", params)
+        total_spent_val = cursor.fetchone()[0]
+        total_spent_str = f"₹{total_spent_val:,.2f}" if total_spent_val is not None else "₹0.00"
+        
+        # Calculate transaction count
+        cursor.execute(f"SELECT COUNT(*) FROM expenses WHERE {where_clause}", params)
+        tx_count_val = cursor.fetchone()[0]
+        
+        # Calculate top category
+        cursor.execute(f"""
+            SELECT category 
+            FROM expenses 
+            WHERE {where_clause} 
+            GROUP BY category 
+            ORDER BY SUM(amount) DESC 
+            LIMIT 1
+        """, params)
+        top_cat_row = cursor.fetchone()
+        top_category_str = top_cat_row["category"] if top_cat_row else "N/A"
+        
+        stats = {
+            "total_spent": total_spent_str,
+            "transaction_count": tx_count_val,
+            "top_category": top_category_str
+        }
+        # SUBAGENT_2_STATS_END
+
+        # SUBAGENT_1_TRANSACTIONS_START
+        cursor.execute(f"""
+            SELECT date, description, category, amount 
+            FROM expenses 
+            WHERE {where_clause} 
+            ORDER BY date DESC, id DESC 
+            LIMIT 5
+        """, params)
+        db_expenses = cursor.fetchall()
+        
+        transactions = []
+        for exp in db_expenses:
+            cat_lower = exp["category"].lower() if exp["category"] else "other"
+            transactions.append({
+                "date": exp["date"],
+                "description": exp["description"] if exp["description"] else "",
+                "category": exp["category"],
+                "amount": f"₹{exp['amount']:,.2f}",
+                "badge_class": f"badge-{cat_lower}"
+            })
+        # SUBAGENT_1_TRANSACTIONS_END
+
+        # SUBAGENT_3_BREAKDOWN_START
+        # Calculate total spent to compute percentages
+        cursor.execute(f"SELECT SUM(amount) FROM expenses WHERE {where_clause}", params)
+        grand_total_row = cursor.fetchone()
+        grand_total = grand_total_row[0] if grand_total_row and grand_total_row[0] is not None else 0.0
+        
+        cursor.execute(f"""
+            SELECT category, SUM(amount) AS total 
+            FROM expenses 
+            WHERE {where_clause} 
+            GROUP BY category 
+            ORDER BY total DESC
+        """, params)
+        db_breakdown = cursor.fetchall()
+        
+        category_breakdown = []
+        for row in db_breakdown:
+            cat_total = row["total"]
+            pct = round((cat_total / grand_total) * 100) if grand_total > 0 else 0
+            cat_lower = row["category"].lower() if row["category"] else "other"
+            category_breakdown.append({
+                "category": row["category"],
+                "amount": f"₹{cat_total:,.2f}",
+                "percentage": pct,
+                "bar_class": f"bar-{cat_lower}"
+            })
+        # SUBAGENT_3_BREAKDOWN_END
 
     conn.close()
-    return render_template("profile.html", user_info=user_info, stats=stats, transactions=transactions, category_breakdown=category_breakdown)
+    return render_template(
+        "profile.html", 
+        user_info=user_info, 
+        stats=stats, 
+        transactions=transactions, 
+        category_breakdown=category_breakdown,
+        start_date=start_date,
+        end_date=end_date,
+        error_msg=error_msg
+    )
 
 
 
