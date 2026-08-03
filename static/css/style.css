@@ -18,6 +18,14 @@
     --bills-light: #eef4f8;
     --shopping: #8b5e83;
     --shopping-light: #faf0f8;
+    --transport: #d35400;
+    --transport-light: #fbeee6;
+    --health: #27ae60;
+    --health-light: #e8f8f5;
+    --entertainment: #8e44ad;
+    --entertainment-light: #f4ecf7;
+    --other: #7f8c8d;
+    --other-light: #f2f4f4;
     --danger: #c0392b;
     --danger-light: #fdecea;
     --border: #e4e1da;
@@ -754,20 +762,13 @@ a { color: inherit; text-decoration: none; }
     border-radius: 999px;
 }
 
-.bar-food {
-    background: var(--accent-2);
-    width: 47%;
-}
-
-.bar-bills {
-    background: var(--bills);
-    width: 34%;
-}
-
-.bar-shopping {
-    background: var(--shopping);
-    width: 19%;
-}
+.bar-food { background: var(--accent-2); }
+.bar-bills { background: var(--bills); }
+.bar-shopping { background: var(--shopping); }
+.bar-transport { background: var(--transport); }
+.bar-health { background: var(--health); }
+.bar-entertainment { background: var(--entertainment); }
+.bar-other { background: var(--other); }
 
 .table-responsive {
     overflow-x: auto;
@@ -846,6 +847,41 @@ a { color: inherit; text-decoration: none; }
 .badge-shopping {
     background: var(--shopping-light);
     color: var(--shopping);
+}
+
+.badge-transport {
+    background: var(--transport-light);
+    color: var(--transport);
+}
+
+.badge-health {
+    background: var(--health-light);
+    color: var(--health);
+}
+
+.badge-entertainment {
+    background: var(--entertainment-light);
+    color: var(--entertainment);
+}
+
+.badge-other {
+    background: var(--other-light);
+    color: var(--other);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    color: var(--ink-muted);
+    font-size: 0.95rem;
+    background: var(--paper-warm);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    margin: 1rem 0;
+}
+
+.empty-state p {
+    margin: 0;
 }
 
 /* Profile Responsiveness */
