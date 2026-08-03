@@ -63,17 +63,23 @@
                 <h3 class="card-title">Category Breakdown</h3>
                 <p class="card-subtitle">Spending distribution across categories</p>
                 <div class="breakdown-list">
-                    {% for item in category_breakdown %}
-                    <div class="breakdown-row">
-                        <div class="breakdown-header">
-                            <span class="breakdown-name">{{ item.category }}</span>
-                            <span class="breakdown-amount">{{ item.amount }} ({{ item.percentage }}%)</span>
+                    {% if category_breakdown %}
+                        {% for item in category_breakdown %}
+                        <div class="breakdown-row">
+                            <div class="breakdown-header">
+                                <span class="breakdown-name">{{ item.category }}</span>
+                                <span class="breakdown-amount">{{ item.amount }} ({{ item.percentage }}%)</span>
+                            </div>
+                            <div class="breakdown-bar-track">
+                                <div class="breakdown-bar {{ item.bar_class }}" style="width: {{ item.percentage }}%;"></div>
+                            </div>
                         </div>
-                        <div class="breakdown-bar-track">
-                            <div class="breakdown-bar {{ item.bar_class }}"></div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No spending recorded yet.</p>
                         </div>
-                    </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
             </div>
 
@@ -82,6 +88,7 @@
                 <h3 class="card-title">Recent Transactions</h3>
                 <p class="card-subtitle">Latest expenses logged to your account</p>
                 <div class="table-responsive">
+                    {% if transactions %}
                     <table class="history-table">
                         <thead>
                             <tr>
@@ -104,6 +111,11 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No recent transactions.</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </main>
