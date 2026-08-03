@@ -1,4 +1,3 @@
-# pyrefly: ignore [missing-import]
 import pytest
 from app import app
 from datetime import datetime
@@ -32,7 +31,7 @@ def test_profile_authenticated_loads(client):
     assert b"Demo User" in response.data
     assert b"Logout" in response.data
     
-    # 2. User info card displays correct name, email, and dynamic join date
+    # 2. User info card displays correct name, email, and join date
     assert b"demo@spendly.com" in response.data
     assert b"Member since" in response.data
     
@@ -48,20 +47,11 @@ def test_profile_authenticated_loads(client):
     assert expected_join_date.encode() in response.data
     
     # 3. Stats display is present and matches seeded database calculations
-    # Total spent: 361.74
-    # Transactions: 8
-    # Top Category: Bills
     assert b"361.74" in response.data
     assert b"8" in response.data
     assert b"Bills" in response.data
     
     # 4. Recent transactions are present (max 5 sorted by date/id descending)
-    # The last 5 seeded expenses (from 2026-08-05 down to 2026-08-02):
-    # - Afternoon coffee and pastry
-    # - Workspace notebook
-    # - New running sneakers
-    # - Cinema tickets with friends
-    # - Vitamins and prescription refill
     assert b"Afternoon coffee and pastry" in response.data
     assert b"Workspace notebook" in response.data
     assert b"New running sneakers" in response.data
