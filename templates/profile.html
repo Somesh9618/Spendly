@@ -47,6 +47,11 @@
                     <span class="meta-label">Member since</span>
                     <span class="meta-value">{{ user_info.member_since }}</span>
                 </div>
+                <div class="profile-actions" style="margin-top: 1.5rem;">
+                    <a href="{{ url_for('add_expense') }}" class="btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%;">
+                        <i data-lucide="plus"></i> Add Expense
+                    </a>
+                </div>
             </div>
 
             <!-- Summary Stats Card -->

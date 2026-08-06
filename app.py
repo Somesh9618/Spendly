@@ -290,9 +290,94 @@ def profile():
 
 
 
-@app.route("/expenses/add")
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    categories = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
+
+    if request.method == "POST":
+        amount_str = request.form.get("amount", "").strip()
+        category = request.form.get("category", "").strip()
+        date_str = request.form.get("date", "").strip()
+        description = request.form.get("description", "").strip()
+
+        error = None
+        amount = None
+
+        # Amount validation
+        if not amount_str:
+            error = "Amount must be greater than 0."
+        else:
+            try:
+                amount = float(amount_str)
+                if amount <= 0:
+                    error = "Amount must be greater than 0."
+            except ValueError:
+                error = "Amount must be greater than 0."
+
+        # Category validation
+        if not error and category not in categories:
+            error = "Invalid category."
+
+        # Date validation
+        if not error:
+            if not date_str:
+                error = "Invalid date format."
+            else:
+                try:
+                    datetime.strptime(date_str, "%Y-%m-%d")
+                except ValueError:
+                    error = "Invalid date format."
+
+        # Description validation
+        if not error and len(description) > 200:
+            error = "Description must be 200 characters or less."
+
+        if error:
+            return render_template(
+                "add_expense.html",
+                error=error,
+                amount=amount_str,
+                category=category,
+                date=date_str,
+                description=description,
+                categories=categories
+            )
+
+        # Database insertion
+        from database.db import get_db
+        conn = get_db()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO expenses (user_id, amount, category, date, description)
+                VALUES (?, ?, ?, ?, ?)
+            """, (session["user_id"], amount, category, date_str, description or None))
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            conn.close()
+            return render_template(
+                "add_expense.html",
+                error="An error occurred while saving the expense. Please try again.",
+                amount=amount_str,
+                category=category,
+                date=date_str,
+                description=description,
+                categories=categories
+            )
+        conn.close()
+        return redirect(url_for("profile"))
+
+    # GET request - pre-populate date with today
+    today_str = datetime.today().strftime("%Y-%m-%d")
+    return render_template(
+        "add_expense.html",
+        date=today_str,
+        categories=categories
+    )
 
 
 @app.route("/expenses/<int:id>/edit")
