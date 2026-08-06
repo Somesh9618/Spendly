@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Set Monthly Budget — Spendly{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-container">
+
+        <div class="auth-header">
+            <h1 class="auth-title">Monthly Budget</h1>
+            <p class="auth-subtitle">Set a limit for your monthly spending</p>
+        </div>
+
+        <div class="auth-card">
+            {% if error %}
+            <div class="auth-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('set_budget') }}">
+                <div class="form-group">
+                    <label for="month">Target Month</label>
+                    <input type="month" id="month" name="month"
+                           class="form-input"
+                           value="{{ default_month }}" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">Budget Amount (₹)</label>
+                    <input type="number" step="0.01" min="0.01" id="amount" name="amount"
+                           class="form-input" placeholder="0.00"
+                           value="{{ amount or '' }}">
+                </div>
+
+                <button type="submit" class="btn-submit">Save Budget</button>
+
+                {% if amount %}
+                <button type="submit" name="clear" value="true" class="btn-clear" 
+                        style="display: inline-flex; width: 100%; justify-content: center; margin-top: 0.75rem; border-color: var(--danger); color: var(--danger);"
+                        onclick="return confirm('Are you sure you want to clear the budget for this month?');">
+                    Clear Budget
+                </button>
+                {% endif %}
+            </form>
+        </div>
+
+        <p class="auth-switch">
+            <a href="{{ url_for('profile') }}" class="btn-clear" style="display: inline-flex; width: 100%; justify-content: center; background: transparent; border-color: var(--border);">Cancel</a>
+        </p>
+
+    </div>
+</section>
+{% endblock %}

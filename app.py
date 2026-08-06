@@ -275,7 +275,61 @@ def profile():
                 "percentage": pct,
                 "bar_class": f"bar-{cat_lower}"
             })
-        # SUBAGENT_3_BREAKDOWN_END
+    # Fetch budget details for the current month
+    today = datetime.today()
+    current_year = today.year
+    current_month = today.month
+    current_month_str = today.strftime("%B %Y")
+    
+    cursor.execute(
+        "SELECT amount FROM budgets WHERE user_id = ? AND year = ? AND month = ?",
+        (session["user_id"], current_year, current_month)
+    )
+    budget_row = cursor.fetchone()
+    budget_amount = budget_row["amount"] if budget_row else None
+    
+    cursor.execute(
+        """
+        SELECT SUM(amount) FROM expenses 
+        WHERE user_id = ? 
+          AND strftime('%Y', date) = ? 
+          AND strftime('%m', date) = ?
+        """,
+        (session["user_id"], f"{current_year}", f"{current_month:02d}")
+    )
+    current_month_spent_row = cursor.fetchone()
+    current_month_spent = current_month_spent_row[0] if current_month_spent_row and current_month_spent_row[0] is not None else 0.0
+    
+    budget_data = None
+    if budget_amount is not None:
+        remaining = budget_amount - current_month_spent
+        pct_spent = round((current_month_spent / budget_amount) * 100) if budget_amount > 0 else 0
+        
+        if pct_spent < 80:
+            bar_class = "bar-budget-green"
+        elif pct_spent <= 100:
+            bar_class = "bar-budget-orange"
+        else:
+            bar_class = "bar-budget-red"
+            
+        budget_data = {
+            "amount": f"₹{budget_amount:,.2f}",
+            "raw_amount": budget_amount,
+            "spent": f"₹{current_month_spent:,.2f}",
+            "raw_spent": current_month_spent,
+            "remaining": f"₹{remaining:,.2f}" if remaining >= 0 else f"-₹{abs(remaining):,.2f}",
+            "raw_remaining": remaining,
+            "percentage": min(pct_spent, 100),
+            "raw_percentage": pct_spent,
+            "bar_class": bar_class,
+            "month_name": current_month_str
+        }
+    else:
+        budget_data = {
+            "amount": None,
+            "spent": f"₹{current_month_spent:,.2f}",
+            "month_name": current_month_str
+        }
 
     conn.close()
     return render_template(
@@ -286,7 +340,8 @@ def profile():
         category_breakdown=category_breakdown,
         start_date=start_date,
         end_date=end_date,
-        error_msg=error_msg
+        error_msg=error_msg,
+        budget_data=budget_data
     )
 
 
@@ -527,6 +582,104 @@ def delete_expense(id):
         conn.close()
 
     return redirect(url_for("profile"))
+
+
+@app.route("/budget", methods=["GET", "POST"])
+def set_budget():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    from database.db import get_db
+
+    today = datetime.today()
+    default_month_val = today.strftime("%Y-%m")
+
+    error = None
+    existing_amount = ""
+    selected_month = default_month_val
+
+    if request.method == "POST":
+        month_val = request.form.get("month", "").strip()
+        amount_str = request.form.get("amount", "").strip()
+        clear_budget = request.form.get("clear")
+
+        if not month_val:
+            error = "Invalid month selection."
+        else:
+            try:
+                parsed_date = datetime.strptime(month_val, "%Y-%m")
+                year = parsed_date.year
+                month = parsed_date.month
+                selected_month = month_val
+            except ValueError:
+                error = "Invalid month format."
+
+        if not error:
+            conn = get_db()
+            cursor = conn.cursor()
+
+            if clear_budget:
+                try:
+                    cursor.execute(
+                        "DELETE FROM budgets WHERE user_id = ? AND year = ? AND month = ?",
+                        (session["user_id"], year, month)
+                    )
+                    conn.commit()
+                except Exception as e:
+                    conn.rollback()
+                    error = "An error occurred while clearing the budget. Please try again."
+                finally:
+                    conn.close()
+            else:
+                if not amount_str:
+                    error = "Amount must be greater than 0."
+                else:
+                    try:
+                        amount = float(amount_str)
+                        if amount <= 0:
+                            error = "Amount must be greater than 0."
+                    except ValueError:
+                        error = "Amount must be greater than 0."
+
+                if not error:
+                    try:
+                        cursor.execute(
+                            "INSERT OR REPLACE INTO budgets (user_id, amount, year, month) VALUES (?, ?, ?, ?)",
+                            (session["user_id"], amount, year, month)
+                        )
+                        conn.commit()
+                    except Exception as e:
+                        conn.rollback()
+                        error = "An error occurred while saving the budget. Please try again."
+                    finally:
+                        conn.close()
+
+            if not error:
+                return redirect(url_for("profile"))
+
+    # GET request or validation error
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        parsed_selected = datetime.strptime(selected_month, "%Y-%m")
+        cursor.execute(
+            "SELECT amount FROM budgets WHERE user_id = ? AND year = ? AND month = ?",
+            (session["user_id"], parsed_selected.year, parsed_selected.month)
+        )
+        budget_row = cursor.fetchone()
+        if budget_row:
+            existing_amount = f"{budget_row['amount']:.2f}"
+    except Exception:
+        pass
+    finally:
+        conn.close()
+
+    return render_template(
+        "set_budget.html",
+        error=error,
+        default_month=selected_month,
+        amount=existing_amount
+    )
 
 
 @app.route("/debug-db")

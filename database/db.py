@@ -42,6 +42,20 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     """)
+
+    # Create budgets table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS budgets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            amount REAL NOT NULL,
+            year INTEGER NOT NULL,
+            month INTEGER NOT NULL,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE (user_id, year, month)
+        )
+    """)
     
     conn.commit()
     conn.close()
@@ -85,6 +99,12 @@ def seed_db():
         INSERT INTO expenses (user_id, amount, category, date, description)
         VALUES (?, ?, ?, ?, ?)
     """, sample_expenses)
+
+    # Insert sample budget for August 2026
+    cursor.execute("""
+        INSERT INTO budgets (user_id, amount, year, month)
+        VALUES (?, ?, ?, ?)
+    """, (user_id, 15000.00, 2026, 8))
     
     conn.commit()
     conn.close()

@@ -54,6 +54,59 @@
                 </div>
             </div>
 
+            <!-- Monthly Budget Card -->
+            <div class="budget-card">
+                <h3 class="card-title">Monthly Budget</h3>
+                <p class="budget-month">{{ budget_data.month_name }}</p>
+                
+                {% if budget_data.amount %}
+                    <div class="budget-amount-row">
+                        <span class="budget-amount-value">{{ budget_data.amount }}</span>
+                        <div class="budget-status-text {% if budget_data.raw_remaining < 0 %}exceeded{% endif %}">
+                            {% if budget_data.raw_remaining >= 0 %}
+                                <span>Remaining: {{ budget_data.remaining }}</span>
+                                <span>{{ budget_data.percentage }}% spent</span>
+                            {% else %}
+                                <span>Exceeded by: ₹{{ "{:,.2f}".format(budget_data.raw_remaining | abs) }}</span>
+                                <span>{{ budget_data.raw_percentage }}% spent</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="budget-bar-track">
+                        <div class="budget-bar {{ budget_data.bar_class }}" style="width: {{ budget_data.percentage }}%;"></div>
+                    </div>
+                    
+                    <div class="budget-details">
+                        <div class="budget-detail-item">
+                            <span class="budget-detail-label">Spent</span>
+                            <span class="budget-detail-val">{{ budget_data.spent }}</span>
+                        </div>
+                        <div class="budget-detail-item">
+                            <span class="budget-detail-label">Status</span>
+                            <span class="budget-detail-val {% if budget_data.raw_remaining < 0 %}danger-text{% endif %}">
+                                {% if budget_data.raw_remaining >= 0 %}
+                                    On Track
+                                {% else %}
+                                    Over Limit
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <a href="{{ url_for('set_budget') }}" class="budget-action-btn">
+                        <i data-lucide="sliders"></i> Adjust Budget
+                    </a>
+                {% else %}
+                    <div class="budget-empty">
+                        <p class="budget-empty-desc">No budget configured for this month.</p>
+                        <a href="{{ url_for('set_budget') }}" class="budget-empty-action">
+                            <i data-lucide="plus"></i> Set Budget
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
             <!-- Summary Stats Card -->
             <div class="profile-card stats-card">
                 <h3 class="card-title">Quick Stats</h3>
