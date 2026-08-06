@@ -1,5 +1,5 @@
 # pyrefly: ignore [missing-import]
-from flask import Flask, render_template, request, redirect, url_for, session, g
+from flask import Flask, render_template, request, redirect, url_for, session, g, abort
 # pyrefly: ignore [missing-import]
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -228,7 +228,7 @@ def profile():
 
         # SUBAGENT_1_TRANSACTIONS_START
         cursor.execute(f"""
-            SELECT date, description, category, amount 
+            SELECT id, date, description, category, amount 
             FROM expenses 
             WHERE {where_clause} 
             ORDER BY date DESC, id DESC 
@@ -240,6 +240,7 @@ def profile():
         for exp in db_expenses:
             cat_lower = exp["category"].lower() if exp["category"] else "other"
             transactions.append({
+                "id": exp["id"],
                 "date": exp["date"],
                 "description": exp["description"] if exp["description"] else "",
                 "category": exp["category"],
@@ -380,9 +381,119 @@ def add_expense():
     )
 
 
-@app.route("/expenses/<int:id>/edit")
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
 def edit_expense(id):
-    return "Edit expense — coming in Step 8"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    categories = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
+
+    from database.db import get_db
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, user_id, amount, category, date, description 
+        FROM expenses 
+        WHERE id = ?
+    """, (id,))
+    expense = cursor.fetchone()
+
+    if expense is None or expense["user_id"] != session["user_id"]:
+        conn.close()
+        abort(404)
+
+    if request.method == "POST":
+        amount_str = request.form.get("amount", "").strip()
+        category = request.form.get("category", "").strip()
+        date_str = request.form.get("date", "").strip()
+        description = request.form.get("description", "").strip()
+
+        error = None
+        amount = None
+
+        # Amount validation
+        if not amount_str:
+            error = "Amount must be greater than 0."
+        else:
+            try:
+                amount = float(amount_str)
+                if amount <= 0:
+                    error = "Amount must be greater than 0."
+            except ValueError:
+                error = "Amount must be greater than 0."
+
+        # Category validation
+        if not error and category not in categories:
+            error = "Invalid category."
+
+        # Date validation
+        if not error:
+            if not date_str:
+                error = "Invalid date format."
+            else:
+                try:
+                    datetime.strptime(date_str, "%Y-%m-%d")
+                except ValueError:
+                    error = "Invalid date format."
+
+        # Description validation
+        if not error and len(description) > 200:
+            error = "Description must be 200 characters or less."
+
+        if error:
+            conn.close()
+            return render_template(
+                "edit_expense.html",
+                error=error,
+                expense={
+                    "id": id,
+                    "amount": amount_str,
+                    "category": category,
+                    "date": date_str,
+                    "description": description
+                },
+                categories=categories
+            )
+
+        try:
+            cursor.execute("""
+                UPDATE expenses
+                SET amount = ?, category = ?, date = ?, description = ?
+                WHERE id = ? AND user_id = ?
+            """, (amount, category, date_str, description or None, id, session["user_id"]))
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            conn.close()
+            return render_template(
+                "edit_expense.html",
+                error="An error occurred while updating the expense. Please try again.",
+                expense={
+                    "id": id,
+                    "amount": amount_str,
+                    "category": category,
+                    "date": date_str,
+                    "description": description
+                },
+                categories=categories
+            )
+        conn.close()
+        return redirect(url_for("profile"))
+
+    # GET request - map sqlite row to dict and pre-populate
+    expense_data = {
+        "id": expense["id"],
+        "amount": f"{expense['amount']:.2f}",
+        "category": expense["category"],
+        "date": expense["date"],
+        "description": expense["description"] or ""
+    }
+    conn.close()
+    return render_template(
+        "edit_expense.html",
+        expense=expense_data,
+        categories=categories
+    )
 
 
 @app.route("/expenses/<int:id>/delete")
